@@ -41,7 +41,7 @@ Run this once interactively. The user opens the returned URL, confirms the code,
 fulcra-api auth login
 ```
 
-For remote chat agents, do not rely on the agent host's local browser. Keep the CLI running, send the printed device authorization URL and code to the intended user in the current trusted chat, and wait for approval. The user can approve from Discord, Telegram, Signal, mobile, or any browser. Never send access tokens or credential files.
+For remote agents, do not rely on the agent host's local browser. Keep the CLI running, send the printed device authorization URL and code to the intended user through the active trusted user channel, and wait for approval. The user can approve from any browser on any device. Never send access tokens or credential files.
 
 Credentials persist to `~/.config/fulcra/credentials.json`; the CLI refreshes access tokens as needed.
 
