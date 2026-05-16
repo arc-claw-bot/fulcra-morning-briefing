@@ -2,7 +2,7 @@
 name: fulcra-morning-briefing
 description: Compose a personalized morning briefing using the latest fulcra-context skill for sleep, biometrics, calendar, activity, and weather context. Adapts tone and detail to how the human actually slept.
 homepage: https://fulcradynamics.com
-metadata: {"openclaw":{"emoji":"🌅","requires":{"bins":["curl","python3","uv","jq"]},"tags":["health","biometrics","productivity","morning","briefing","fulcra"],"category":"lifestyle","version":"1.1.0","author":"OpenClaw Community","license":"MIT"}}
+metadata: {"openclaw":{"emoji":"🌅","requires":{"bins":["curl","python3","uv","jq"]},"tags":["health","biometrics","productivity","morning","briefing","fulcra"],"category":"lifestyle","version":"1.1.1","author":"OpenClaw Community","license":"MIT"}}
 ---
 
 # 🌅 Fulcra Morning Briefing
@@ -40,6 +40,8 @@ Run this once interactively. The user opens the returned URL, confirms the code,
 ```bash
 fulcra-api auth login
 ```
+
+For remote chat agents, do not rely on the agent host's local browser. Keep the CLI running, send the printed device authorization URL and code to the intended user in the current trusted chat, and wait for approval. The user can approve from Discord, Telegram, Signal, mobile, or any browser. Never send access tokens or credential files.
 
 Credentials persist to `~/.config/fulcra/credentials.json`; the CLI refreshes access tokens as needed.
 
