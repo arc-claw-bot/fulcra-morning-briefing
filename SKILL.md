@@ -38,7 +38,7 @@ jq --version
 Run this once interactively. The user opens the returned URL, confirms the code, and approves access:
 
 ```bash
-fulcra-api auth login
+uv tool run fulcra-api auth login
 ```
 
 For remote agents, do not rely on the agent host's local browser. Keep the CLI running, send the printed device authorization URL and code to the intended user through the active trusted user channel, and wait for approval. The user can approve from any browser on any device. Never send access tokens or credential files.
@@ -252,8 +252,8 @@ You've got the energy — swing for the fences today!
 If the collector cannot run, inspect the CLI directly and parse JSON with `jq`:
 
 ```bash
-fulcra-api --help
-fulcra-api calendar-events --help
+uv tool run fulcra-api --help
+uv tool run fulcra-api calendar-events --help
 ```
 
 ## Automation

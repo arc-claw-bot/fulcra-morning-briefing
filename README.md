@@ -15,7 +15,7 @@ Pulls your sleep, heart rate, HRV, calendar, and weather — then composes a bri
 ## Quick Start
 
 1. Install prerequisites: `uv` and `jq`
-2. Authorize: `fulcra-api auth login` (one-time, the user approves). For remote agents, send only the printed device URL and code to the intended user through the active trusted user channel; never send access tokens or credential files.
+2. Authorize: `uv tool run fulcra-api auth login` (one-time, the user approves). For remote agents, send only the printed device URL and code to the intended user through the active trusted user channel; never send access tokens or credential files.
 3. Install or place `fulcra-context` next to this skill, or set `FULCRA_CONTEXT_SCRIPTS=/path/to/fulcra-context/scripts`
 4. Collect data: `python3 collect_briefing_data.py --location "Your+City"`
 5. Agent reads the JSON and composes a briefing using the tone rules in SKILL.md
