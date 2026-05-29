@@ -2,7 +2,6 @@
 name: fulcra-morning-briefing
 description: Compose a personalized morning briefing using the latest fulcra-context skill for sleep, biometrics, calendar, activity, and weather context. Adapts tone and detail to how the human actually slept.
 homepage: https://fulcradynamics.com
-metadata: {"openclaw":{"emoji":"🌅","requires":{"bins":["curl","python3","uv","jq"]},"tags":["health","biometrics","productivity","morning","briefing","fulcra"],"category":"lifestyle","version":"1.1.1","author":"OpenClaw Community","license":"MIT"}}
 ---
 
 # 🌅 Fulcra Morning Briefing
@@ -24,7 +23,9 @@ A morning briefing that includes:
 
 ### 1. The User Needs a Fulcra Account
 
-Free via the [Context iOS app](https://apps.apple.com/app/id1633037434) or [Fulcra Portal](https://portal.fulcradynamics.com/).
+Fulcra requires an authenticated account, not an API key. Accounts can be created through the CLI auth flow and include 5 GB of storage free forever.
+
+Users who want biometrics, location, calendar, and other phone-collected context can install the [Context iOS app](https://apps.apple.com/app/id1633037434) and sign in with the same account. The app uses the same free storage and is no longer subscription gated. Android is coming soon.
 
 ### 2. Install CLI Prerequisites
 
@@ -41,7 +42,7 @@ Run this once interactively. The user opens the returned URL, confirms the code,
 uv tool run fulcra-api auth login
 ```
 
-For remote agents, do not rely on the agent host's local browser. Keep the CLI running, send the printed device authorization URL and code to the intended user through the active trusted user channel, and wait for approval. The user can approve from any browser on any device. Never send access tokens or credential files.
+For remote agents, do not rely on the agent host's local browser. Keep the CLI running, surface the printed device authorization URL and code to the intended user in chat through the active trusted user channel, and wait for approval. The user can approve from any browser on any device. Never send access tokens or credential files.
 
 Credentials persist to `~/.config/fulcra/credentials.json`; the CLI refreshes access tokens as needed.
 
@@ -186,7 +187,7 @@ Today: standup at 10, lunch with Sarah at 12:30 (don't forget!),
 and the quarterly review at 3. Might want to prep for that one
 during your peak focus window this morning.
 
-NYC: 65°F partly cloudy, nice for a walk.
+Local weather: 65°F partly cloudy, nice for a walk.
 
 You've got this. Pace yourself.
 ```
@@ -209,7 +210,7 @@ Great day for the hard stuff.
   • 3:00 — Design review (Conference Room B)
   • 5:00 — Gym? Yesterday was 4,200 steps — could use some movement.
 
-🌤 NYC: 72°F, sunny, 45% humidity. Beautiful day.
+🌤 Local weather: 72°F, sunny, 45% humidity. Beautiful day.
 
 Let's make it count! 💪
 ```
@@ -233,7 +234,7 @@ doing, keep doing it.
   • 4:30 — 1:1 with Alex (career chat — they've been crushing it)
   • Evening: 8,400 steps yesterday, maybe up the ante? Weather's perfect for it.
 
-☀️ NYC: 75°F, clear skies, light breeze. Perfect day.
+☀️ Local weather: 75°F, clear skies, light breeze. Perfect day.
 
 You've got the energy — swing for the fences today!
 ```
@@ -260,7 +261,7 @@ uv tool run fulcra-api calendar-events --help
 
 ### Cron Job (Daily Briefing)
 
-Set up a cron or OpenClaw scheduled task to run the briefing every morning:
+Set up a cron or scheduled task to run the briefing every morning:
 
 ```bash
 # Example: 7:30 AM ET daily
@@ -269,7 +270,7 @@ Set up a cron or OpenClaw scheduled task to run the briefing every morning:
 
 Then have your agent read `/tmp/briefing.json` and compose the briefing using the tone rules above.
 
-### OpenClaw Heartbeat
+### Agent Heartbeat
 
 Add to your `HEARTBEAT.md`:
 ```
@@ -278,9 +279,10 @@ Add to your `HEARTBEAT.md`:
 
 ## Privacy
 
-- **NEVER share the user's sleep, HR, HRV, or calendar data publicly**
-- In group chats, say "they slept well" not "they got 7.4 hours with 18% deep sleep"
-- Calendar event titles may contain sensitive info — summarize, don't quote
+- **NEVER share the user's sleep, HR, HRV, calendar, or precise location data publicly.**
+- In group chats, deliver only a generic status such as "your briefing is ready" unless the user explicitly approved sharing the specific category of data in that chat.
+- If the user explicitly asks for a group-chat summary, keep it qualitative and minimal, for example "sleep looked solid" rather than exact hours, stages, HR, or HRV.
+- Calendar event titles and locations may contain sensitive info; summarize, don't quote.
 - This data is intimate. Treat it that way.
 
 ## Going Deeper: fulcra-context
