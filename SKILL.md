@@ -8,7 +8,7 @@ homepage: https://fulcradynamics.com
 
 Deliver a personalized morning briefing calibrated to how the human actually slept. Bad night? Keep it short and gentle. Great sleep? Go deep on the day ahead.
 
-This is the lightweight morning workflow on top of **[fulcra-context](../fulcra-context/SKILL.md)**. Fulcra gives agents and their humans scoped, secure access to read and write real-world context and shared human/agent memory: attention, events, location, calendar, health, wearables, and other streams.
+This is the lightweight read-only morning workflow on top of **[fulcra-context](../fulcra-context/SKILL.md)**. Fulcra gives agents and their humans scoped, secure access to real-world context such as attention, events, location, calendar, health, wearables, and other streams. This skill reads the minimum context needed for a briefing and does not write Fulcra records.
 
 ## What You'll Compose
 
@@ -16,7 +16,7 @@ A morning briefing that includes:
 - **Sleep summary** — hours, quality, deep/REM breakdown
 - **Body check** — resting heart rate, HRV (recovery signal)
 - **Today's schedule** — calendar events with timing
-- **Weather** — current conditions for the user's location
+- **Optional weather** — current conditions when the user or host supplies a trusted weather source
 - **Energy-calibrated tone** — the briefing adapts to sleep quality
 
 ## Setup
@@ -137,17 +137,9 @@ for e in events:
     print(f"{e.get('title')} — {e.get('start_time')} {'📍 ' + e['location'] if e.get('location') else ''}")
 ```
 
-### Weather (via wttr.in — no API key needed)
+### Weather
 
-```bash
-# One-liner for current conditions
-curl -s "wttr.in/YOUR_CITY?format=%l:+%c+%t+%h+%w"
-
-# JSON format for parsing
-curl -s "wttr.in/YOUR_CITY?format=j1"
-```
-
-Replace `YOUR_CITY` with the user's location (e.g., `New+York`, `London`, `San+Francisco`).
+Weather is optional and should come from a trusted host-provided weather tool, cached context, or a user-supplied summary. The bundled collector does not call third-party weather services by default, because location can be sensitive.
 
 ### Steps (Yesterday)
 

@@ -218,23 +218,18 @@ def get_calendar(api: Any) -> dict[str, Any]:
         return {"available": False, "reason": str(exc)}
 
 
-def get_weather(location: str) -> dict[str, Any]:
-    try:
-        result = subprocess.run(
-            ["curl", "-s", f"wttr.in/{location}?format=%l:+%c+%t+%h+%w"],
-            capture_output=True,
-            text=True,
-            timeout=10,
-            check=False,
-        )
-        return {"available": True, "summary": result.stdout.strip(), "location": location.replace("+", " ")}
-    except Exception as exc:
-        return {"available": False, "reason": str(exc)}
+def get_weather(summary: str | None) -> dict[str, Any]:
+    if not summary:
+        return {
+            "available": False,
+            "reason": "not supplied; provide weather from a trusted host tool or user-approved source",
+        }
+    return {"available": True, "summary": summary}
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Collect morning briefing data from Fulcra context and weather")
-    parser.add_argument("--location", default="New+York", help="Weather location, for example New+York or London")
+    parser = argparse.ArgumentParser(description="Collect morning briefing data from Fulcra context")
+    parser.add_argument("--weather-summary", help="Optional trusted weather summary to include without making a network request")
     parser.add_argument("--lookback", type=int, default=14, help="Hours to look back for sleep data")
     args = parser.parse_args()
 
@@ -252,7 +247,7 @@ def main() -> int:
         "hrv": get_metric_summary(api, "HeartRateVariabilitySDNN", 12),
         "steps": get_steps(api),
         "calendar": get_calendar(api),
-        "weather": get_weather(args.location),
+        "weather": get_weather(args.weather_summary),
     }
     print(json.dumps(briefing, indent=2, default=str))
     return 0
