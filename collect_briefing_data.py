@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Collect Fulcra context for a morning briefing.
 
-This script depends on the companion fulcra-context skill. It outputs structured
-JSON for an agent to turn into a tone-calibrated morning briefing.
+This script outputs structured JSON for an agent to turn into a tone-calibrated
+morning briefing. It can use a local Fulcra context service when explicitly
+configured, and otherwise falls back to direct Fulcra CLI JSON commands.
 """
 
 from __future__ import annotations
@@ -42,9 +43,83 @@ def load_api() -> tuple[Any | None, str | None]:
     try:
         from fulcra_data_service import get_service
     except ImportError:
-        return None, "Fulcra context service unavailable. Install fulcra-context next to this skill or set FULCRA_CONTEXT_SCRIPTS."
+        return CliFulcraApi(), None
 
     return get_service(), None
+
+
+def parse_fulcra_output(text: str) -> Any:
+    text = text.strip()
+    if not text:
+        return None
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        items = []
+        for line in text.splitlines():
+            line = line.strip()
+            if line:
+                items.append(json.loads(line))
+        return items
+
+
+def run_fulcra_json(*args: str, timeout: int = 30) -> Any:
+    result = subprocess.run(
+        ["uv", "tool", "run", "fulcra-api", *args],
+        capture_output=True,
+        text=True,
+        timeout=timeout,
+        check=False,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(result.stderr.strip() or result.stdout.strip() or f"fulcra-api {' '.join(args)} failed")
+    text = result.stdout.strip()
+    return parse_fulcra_output(text)
+
+
+class CliFulcraApi:
+    """Small CLI-backed subset used when no host service is configured."""
+
+    def get_metric_samples(self, start: str, end: str, metric_name: str) -> list[dict[str, Any]]:
+        payload = run_fulcra_json("get-records", metric_name, start, end)
+        if isinstance(payload, list):
+            return payload
+        if isinstance(payload, dict):
+            records = payload.get("records") or payload.get("data") or payload.get("items")
+            if isinstance(records, list):
+                return records
+        return []
+
+    def get_calendar_events(self, start: str, end: str) -> list[dict[str, Any]]:
+        payload = run_fulcra_json("calendar-events", start, end)
+        if isinstance(payload, list):
+            return payload
+        if isinstance(payload, dict):
+            events = payload.get("events") or payload.get("data") or payload.get("items")
+            if isinstance(events, list):
+                return events
+        return []
+
+
+def get_data_updates(hours: int) -> dict[str, Any]:
+    try:
+        payload = run_fulcra_json("data-updates", f"{hours} hours")
+        if not isinstance(payload, dict):
+            return {"available": False, "reason": "unexpected output"}
+        data_types = payload.get("data_types") or {}
+        file_changes = payload.get("file_changes") or []
+        if not isinstance(data_types, dict):
+            data_types = {}
+        if not isinstance(file_changes, list):
+            file_changes = []
+        return {
+            "available": True,
+            "window_hours": hours,
+            "changed_types": sorted(str(key) for key in data_types.keys()),
+            "file_changes_count": len(file_changes),
+        }
+    except Exception as exc:
+        return {"available": False, "reason": str(exc)}
 
 
 def get_sleep(api: Any, lookback_hours: int = 14) -> dict[str, Any]:
@@ -57,7 +132,7 @@ def get_sleep(api: Any, lookback_hours: int = 14) -> dict[str, Any]:
         if not samples:
             return {"available": False, "reason": "no data"}
 
-        stage_names = {2: "Awake", 3: "Core", 4: "Deep", 5: "REM"}
+        stage_names = {0: "InBed", 1: "Asleep", 2: "Awake", 3: "Core", 4: "Deep", 5: "REM"}
         stage_minutes: dict[str, float] = {}
 
         for sample in samples:
@@ -67,7 +142,7 @@ def get_sleep(api: Any, lookback_hours: int = 14) -> dict[str, Any]:
             stage = stage_names.get(sample.get("value", -1), f"Unknown({sample.get('value')})")
             stage_minutes[stage] = stage_minutes.get(stage, 0) + minutes
 
-        sleep_minutes = sum(value for key, value in stage_minutes.items() if key != "Awake")
+        sleep_minutes = sum(value for key, value in stage_minutes.items() if key not in {"Awake", "InBed"})
         deep_pct = stage_minutes.get("Deep", 0) / max(sleep_minutes, 1) * 100
         rem_pct = stage_minutes.get("REM", 0) / max(sleep_minutes, 1) * 100
 
@@ -171,6 +246,7 @@ def main() -> int:
     briefing = {
         "ok": True,
         "generated_at": datetime.now(timezone.utc).isoformat(),
+        "freshness": get_data_updates(args.lookback),
         "sleep": get_sleep(api, args.lookback),
         "heart_rate": get_metric_summary(api, "HeartRate", 10),
         "hrv": get_metric_summary(api, "HeartRateVariabilitySDNN", 12),

@@ -46,6 +46,13 @@ For remote agents, do not rely on the agent host's local browser. Keep the CLI r
 
 Credentials persist to `~/.config/fulcra/credentials.json`; the CLI refreshes access tokens as needed.
 
+Before relying on newly documented CLI commands or options, inspect live help:
+
+```bash
+uv tool run fulcra-api --help
+uv tool run fulcra-api auth login --help
+```
+
 ## How to Collect Data
 
 ### Preferred: Run the Collector
@@ -54,7 +61,15 @@ Credentials persist to `~/.config/fulcra/credentials.json`; the CLI refreshes ac
 python3 skills/fulcra-morning-briefing/collect_briefing_data.py --location "New+York"
 ```
 
-The collector loads `fulcra-context/scripts/fulcra_data_service.py` from an installed sibling skill, or from `FULCRA_CONTEXT_SCRIPTS` when set.
+The collector prefers an explicitly configured local service via `FULCRA_CONTEXT_SCRIPTS`, then falls back to direct `uv tool run fulcra-api` JSON commands. Do not assume the installed `fulcra-context` ClawHub skill contains helper scripts; it is docs-first.
+
+When `data-updates` is available, run it before detailed morning pulls:
+
+```bash
+uv tool run fulcra-api data-updates "14 hours"
+```
+
+Use it as a freshness signal for overnight sleep/biometric streams, calendar data, workouts/activity, and file-backed inputs. Counts are not briefing facts; still fetch the specific records before summarizing the morning.
 
 ### Loading the Shared Service
 
@@ -75,7 +90,7 @@ end = now.isoformat()
 samples = api.get_metric_samples(start, end, "SleepStage")
 ```
 
-Sleep stage values: `0=InBed, 1=Awake, 2=Core/Light, 3=Deep, 4=REM`
+Common sleep stage values: `0=InBed, 1=Asleep/Unspecified, 2=Awake, 3=Core, 4=Deep, 5=REM`. Inspect live records before assuming a reduced mapping.
 
 **Quality heuristic:**
 - **Excellent:** ≥7h sleep, ≥15% deep, ≥20% REM
@@ -254,8 +269,12 @@ If the collector cannot run, inspect the CLI directly and parse JSON with `jq`:
 
 ```bash
 uv tool run fulcra-api --help
+uv tool run fulcra-api data-updates "14 hours"
+uv tool run fulcra-api sleep-stages "14 hours"
 uv tool run fulcra-api calendar-events --help
 ```
+
+If sleep, HRV, or calendar data is empty, verify auth with `uv tool run fulcra-api user-info`, use `data-updates` when available, then do one narrow confirming read before concluding the data is missing or stale.
 
 ## Automation
 
